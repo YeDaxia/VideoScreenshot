@@ -1,18 +1,11 @@
 <template>
   <div id="sidebar" class="container mt-4">
     <h1 class="mb-4 text-center">台词拼图</h1>
-    <div class="frame-list">
-       <div v-for="frame in frames" :key="frame.id">
-        <img :src="frame.dataUrl" class="img-thumbnail" width="100" />
-       </div>
-    </div>
-    <draggable v-model="frames" item-key="id" class="list-group">
-      <template #item="{element, index}">
-        <div class="list-group-item d-flex justify-content-between align-items-center">
-          <img :src="element.dataUrl" class="img-thumbnail" width="100" />
+    <draggable :list="frames" class="drag-area">
+        <div v-for="(element, index) in frames" :key="index" class="list-group-item d-flex justify-content-between align-items-center">
+          <img :src="element.dataUrl" class="img-fluid"/>
           <button class="btn btn-danger btn-sm" @click="deleteFrame(index)">删除</button>
         </div>
-      </template>
     </draggable>
     <div class="d-grid gap-2 mt-3">
       <button class="btn btn-success" @click="saveImage" :disabled="frames.length === 0">保存图片</button>
