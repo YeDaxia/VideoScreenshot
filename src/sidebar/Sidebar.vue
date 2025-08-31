@@ -60,33 +60,54 @@ export default {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
 
-      let totalHeight = 0;
-      let maxWidth = 0;
-
       const promises = this.frames.map(frame => {
         return new Promise(resolve => {
           const img = new Image();
           img.src = frame.dataUrl;
-          img.onload = () => {
-            if (maxWidth < img.width) {
-              maxWidth = img.width;
-            }
-            totalHeight += img.height * (1 - this.spacing / 100);
-            resolve(img);
-          };
+          img.onload = () => resolve(img);
+          img.onerror = () => resolve(null);
         });
       });
 
-      Promise.all(promises).then(images => {
+      Promise.all(promises).then(loadedImages => {
+        const images = loadedImages.filter(img => img !== null);
+        if (images.length === 0) {
+          return;
+        }
+
+        // To ensure a uniform stitch, we'll normalize all images to the same width.
+        // We'll use the maximum width found in the set of images.
+        const maxWidth = Math.max(...images.map(img => img.naturalWidth));
         canvas.width = maxWidth;
-        canvas.height = totalHeight + (images[images.length - 1].height * (this.spacing / 100));
 
-        let y = 0;
-        images.forEach((img,index) => {
-          ctx.drawImage(img, 0, y);
-          y += img.height * (1 - this.spacing / 100) ;
-        });
+        // Calculate the corresponding height for each image to maintain aspect ratio.
+        const scaledHeights = images.map(img => img.naturalHeight * (maxWidth / img.naturalWidth));
 
+        // Calculate total height and the y-position for each image in a single pass.
+        let totalHeight = 0;
+        const yPositions = [];
+        let currentY = 0;
+
+        if (images.length > 0) {
+          for (let i = 0; i < images.length; i++) {
+            yPositions.push(currentY);
+            if (i < images.length - 1) {
+              currentY += scaledHeights[i] * (1 - this.spacing / 100);
+            } else {
+              // For the last image, add its full height to get the total.
+              totalHeight = currentY + scaledHeights[i];
+            }
+          }
+        }
+        canvas.height = totalHeight;
+
+        // Draw images in reverse order so the first image appears on top
+        for (let i = images.length - 1; i >= 0; i--) {
+          const img = images[i];
+          ctx.drawImage(img, 0, yPositions[i], maxWidth, scaledHeights[i]);
+        }
+
+        // Trigger the download.
         const link = document.createElement('a');
         link.href = canvas.toDataURL('image/png');
         link.download = 'pintu.png';
