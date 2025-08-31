@@ -1,14 +1,19 @@
 <template>
-  <div id="sidebar" class="container mt-4">
-    <h1 class="mb-4 text-center">台词拼图</h1>
-    <draggable :list="frames" class="drag-area">
-        <div v-for="(element, index) in frames" :key="index" class="list-group-item d-flex justify-content-between align-items-center">
-          <img :src="element.dataUrl" class="img-fluid"/>
+  <div id="sidebar" class="d-flex flex-column">
+    <div class="main-content flex-grow-1">
+      <draggable :list="frames" class="list-group">
+        <div v-for="(element, index) in frames" :key="index" :style="getFrameStyle(index)" class="list-group-item d-flex justify-content-between align-items-center">
+          <img ref="imageRef" :src="element.dataUrl" class="img-fluid" @load="onImageLoad(index)"/>
           <button class="btn btn-danger btn-sm" @click="deleteFrame(index)">删除</button>
         </div>
-    </draggable>
-    <div class="d-grid gap-2 mt-3">
-      <button class="btn btn-success" @click="saveImage" :disabled="frames.length === 0">保存图片</button>
+     </draggable>
+    </div>
+    <div class="footer p-3 bg-light border-top">
+      <div class="d-flex align-items-center">
+        <span>间距</span>
+        <input type="range" class="form-range mx-2" min="0" max="100" v-model.number="spacing">
+        <button class="btn btn-success" @click="saveImage" :disabled="frames.length === 0">下载拼图</button>
+      </div>
     </div>
   </div>
 </template>
@@ -23,9 +28,31 @@ export default {
   data() {
     return {
       frames: [],
+      spacing: 0,
+      frameHeight: 0,
     };
   },
+  watch: {
+    frames(newFrames) {
+      if (newFrames.length === 0) {
+        this.frameHeight = 0;
+      }
+    },
+  },
   methods: {
+    onImageLoad(index) {
+        this.frameHeight = this.$refs.imageRef[0].clientHeight;
+        console.log('clientHeight:', this.frameHeight);
+    },
+    getFrameStyle(index) {
+      const height = this.frameHeight || 150; // Fallback for safety
+      const yOffset = -index * (this.spacing / 100) * height;
+      return {
+        transform: `translateY(${yOffset}px)`,
+        zIndex: this.frames.length - index,
+        position: 'relative',
+      };
+    },
     deleteFrame(index) {
       this.frames.splice(index, 1);
     },
@@ -34,26 +61,30 @@ export default {
       const ctx = canvas.getContext('2d');
 
       let totalHeight = 0;
+      let maxWidth = 0;
+
       const promises = this.frames.map(frame => {
         return new Promise(resolve => {
           const img = new Image();
           img.src = frame.dataUrl;
           img.onload = () => {
-            if (canvas.width < img.width) {
-              canvas.width = img.width;
+            if (maxWidth < img.width) {
+              maxWidth = img.width;
             }
-            totalHeight += img.height;
+            totalHeight += img.height * (1 - this.spacing / 100);
             resolve(img);
           };
         });
       });
 
       Promise.all(promises).then(images => {
-        canvas.height = totalHeight;
+        canvas.width = maxWidth;
+        canvas.height = totalHeight + (images[images.length - 1].height * (this.spacing / 100));
+
         let y = 0;
-        images.forEach(img => {
+        images.forEach((img,index) => {
           ctx.drawImage(img, 0, y);
-          y += img.height;
+          y += img.height * (1 - this.spacing / 100) ;
         });
 
         const link = document.createElement('a');
@@ -64,12 +95,9 @@ export default {
     },
   },
   created() {
-    console.log('Sidebar created and listener is active.');
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-      console.log('Sidebar received message:', request);
       if (request.action === 'new_frame' && request.dataUrl) {
         this.frames.push({ id: Date.now(), dataUrl: request.dataUrl });
-        console.log('Frames updated:', this.frames);
       }
     });
   },
@@ -78,6 +106,20 @@ export default {
 
 <style>
 #sidebar {
-  width: 100%;
+  height: 100vh;
+}
+.main-content {
+  overflow-y: auto;
+}
+.list-group-item {
+  border: none;
+  padding: 0;
+  margin-bottom: -5px; /* Adjust this to fine-tune spacing */
+}
+.delete-btn {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  z-index: 1000;
 }
 </style>
