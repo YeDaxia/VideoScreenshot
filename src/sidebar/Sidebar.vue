@@ -1,12 +1,22 @@
 <template>
   <div id="sidebar" class="d-flex flex-column">
-    <div class="main-content flex-grow-1">
-      <draggable :list="frames" class="list-group">
-        <div v-for="(element, index) in frames" :key="index" :style="getFrameStyle(index)" class="list-group-item d-flex justify-content-between align-items-center">
+    <div class="main-content d-flex flex-grow-1">
+      <div class="preview-area flex-grow-1">
+        <div v-for="(element, index) in frames" :key="index" :style="getFrameStyle(index)" class="preview-item">
           <img ref="imageRef" :src="element.dataUrl" class="img-fluid" @load="onImageLoad(index)"/>
-          <button class="btn btn-danger btn-sm" @click="deleteFrame(index)">删除</button>
         </div>
-     </draggable>
+      </div>
+      <div class="editor-area">
+        <draggable :list="frames" class="list-group" handle=".drag-handle">
+          <div v-for="(element, index) in frames" :key="index" class="editor-item">
+            <img :src="element.dataUrl" class="editor-thumbnail"/>
+            <div class="item-overlay">
+              <span class="drag-handle">&#9776;</span>
+              <span class="delete-icon" @click="deleteFrame(index)">&times;</span>
+            </div>
+          </div>
+        </draggable>
+      </div>
     </div>
     <div class="footer p-3 bg-light border-top">
       <div class="d-flex align-items-center">
@@ -128,19 +138,55 @@ export default {
 <style>
 #sidebar {
   height: 100vh;
+  overflow: hidden;
 }
 .main-content {
+  padding: 10px;
+  gap: 10px;
+  overflow: hidden;
+}
+.preview-area {
+  overflow-y: auto;
+  position: relative;
+}
+.editor-area {
+  flex-shrink: 0;
   overflow-y: auto;
 }
-.list-group-item {
-  border: none;
-  padding: 0;
-  margin-bottom: -5px; /* Adjust this to fine-tune spacing */
+.editor-item {
+  position: relative;
+  width: 60px;
+  aspect-ratio: 4 / 3;
+  margin-bottom: 2px;
 }
-.delete-btn {
+.editor-thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.item-overlay {
   position: absolute;
-  top: 5px;
-  right: 5px;
-  z-index: 1000;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: white;
+  font-size: 14px;
+}
+.drag-handle {
+  cursor: move;
+  padding-left: 4px;
+}
+.delete-icon {
+  cursor: pointer;
+  padding-right: 4px;
+}
+.footer {
+  flex-shrink: 0;
 }
 </style>
