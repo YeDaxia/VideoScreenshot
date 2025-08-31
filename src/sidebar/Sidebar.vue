@@ -1,8 +1,9 @@
 <template>
   <div id="sidebar" class="d-flex flex-column">
-    <div class="header p-3 bg-light border-bottom">
-      <button class="btn btn-primary w-100" @click="captureVideoFrame">
-        截图
+    <div class="header p-3 bg-light">
+      <button class="btn btn-rounded btn-outline-primary btn-lg w-100" @click="captureVideoFrame">
+        <Icon icon="mdi:camera" width="1.2em"/>
+        <span class="px-1">截图</span>
       </button>
     </div>
     <div class="main-content d-flex flex-grow-1">
@@ -23,11 +24,13 @@
         </draggable>
       </div>
     </div>
-    <div class="footer p-3 bg-light border-top">
-      <div class="d-flex align-items-center">
-        <span>间距</span>
-        <input type="range" class="form-range mx-2" min="0" max="100" v-model.number="spacing">
-        <button class="btn btn-success" @click="saveImage" :disabled="frames.length === 0">下载拼图</button>
+    <div class="footer p-2 bg-light">
+      <div class="d-flex align-items-center gap-1">
+        <input type="range" class="form-range mx-2" min="0" max="100" v-model.number="spacing" :disabled="frames.length === 0">
+        <button class="btn btn-outline-primary btn-rounded btn-save" @click="saveImage" :disabled="frames.length === 0">
+           <Icon icon="mdi:content-save" width="1.3em"/>
+           <span class="px-1">保存</span>
+        </button>
       </div>
     </div>
   </div>
@@ -35,10 +38,12 @@
 
 <script>
 import { VueDraggableNext } from 'vue-draggable-next';
+import { Icon } from '@iconify/vue';
 
 export default {
   components: {
     draggable: VueDraggableNext,
+    Icon,
   },
   data() {
     return {
@@ -163,6 +168,28 @@ export default {
   height: 100vh;
   overflow: hidden;
 }
+.screenshot-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 10px;
+  border-radius: 25px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.screenshot-btn .iconify {
+  margin-right: 8px;
+}
+
+.btn-rounded{
+  border-radius: 9999px;
+}
+
 .main-content {
   padding: 10px;
   gap: 10px;
@@ -208,6 +235,9 @@ export default {
 .delete-icon {
   cursor: pointer;
   padding-right: 4px;
+}
+.btn-save{
+  width: 120px;
 }
 .footer {
   flex-shrink: 0;
