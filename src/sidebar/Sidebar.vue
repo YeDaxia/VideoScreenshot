@@ -1,5 +1,10 @@
 <template>
   <div id="sidebar" class="d-flex flex-column">
+    <div class="header p-3 bg-light border-bottom">
+      <button class="btn btn-primary w-100" @click="captureVideoFrame">
+        截图
+      </button>
+    </div>
     <div class="main-content d-flex flex-grow-1">
       <div class="preview-area flex-grow-1">
         <div v-for="(element, index) in frames" :key="index" :style="getFrameStyle(index)" class="preview-item">
@@ -50,9 +55,26 @@ export default {
     },
   },
   methods: {
+    captureVideoFrame() {
+      console.log('Sidebar: Sending \'capture\' message to content script.');
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        chrome.scripting.executeScript(
+          {
+            target: { tabId: tabs[0].id },
+            files: ['content.js'],
+          },
+          () => {
+            // After the script is injected, send the message to capture
+            chrome.tabs.sendMessage(tabs[0].id, { action: 'capture' });
+          }
+        );
+      });
+    },
     onImageLoad(index) {
+      if (this.$refs.imageRef && this.$refs.imageRef.length > 0) {
         this.frameHeight = this.$refs.imageRef[0].clientHeight;
         console.log('clientHeight:', this.frameHeight);
+      }
     },
     getFrameStyle(index) {
       const height = this.frameHeight || 150; // Fallback for safety
@@ -128,6 +150,7 @@ export default {
   created() {
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       if (request.action === 'new_frame' && request.dataUrl) {
+        console.log('Sidebar: Received \'new_frame\' message.');
         this.frames.push({ id: Date.now(), dataUrl: request.dataUrl });
       }
     });
