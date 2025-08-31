@@ -1,9 +1,9 @@
 <template>
   <div id="sidebar" class="d-flex flex-column">
     <div class="header p-3 bg-light">
-      <button class="btn btn-rounded btn-outline-primary btn-lg w-100" @click="captureVideoFrame">
+      <button class="btn btn-outline-primary btn-lg btn-rounded w-100" @click="captureVideoFrame">
         <Icon icon="mdi:camera" width="1.2em"/>
-        <span class="px-1">截图</span>
+        <span class="px-1">{{ t('screenshot') }}</span>
       </button>
     </div>
     <div class="main-content d-flex flex-grow-1">
@@ -29,7 +29,7 @@
         <input type="range" class="form-range mx-2" min="0" max="100" v-model.number="spacing" :disabled="frames.length === 0">
         <button class="btn btn-outline-primary btn-rounded btn-save" @click="saveImage" :disabled="frames.length === 0">
            <Icon icon="mdi:content-save" width="1.3em"/>
-           <span class="px-1">保存</span>
+           <span class="px-1">{{ t('save') }}</span>
         </button>
       </div>
     </div>
@@ -39,6 +39,7 @@
 <script>
 import { VueDraggableNext } from 'vue-draggable-next';
 import { Icon } from '@iconify/vue';
+import { t } from '../utils/i18n';
 
 export default {
   components: {
@@ -60,6 +61,7 @@ export default {
     },
   },
   methods: {
+    t,
     captureVideoFrame() {
       console.log('Sidebar: Sending \'capture\' message to content script.');
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -109,6 +111,7 @@ export default {
       Promise.all(promises).then(loadedImages => {
         const images = loadedImages.filter(img => img !== null);
         if (images.length === 0) {
+          alert(t('noImages'));
           return;
         }
 
@@ -187,7 +190,7 @@ export default {
 }
 
 .btn-rounded{
-  border-radius: 9999px;
+  border-radius: 9999px !important;
 }
 
 .main-content {
