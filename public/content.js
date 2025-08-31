@@ -5,19 +5,20 @@ if (typeof window.contentScriptInjected === 'undefined') {
 
   // 截图功能函数
   function captureVideoFrame() {
+    console.log('Content script: Capturing video frame.');
     const video = document.querySelector('video');
     if (video) {
-      console.log("Content script: Found video element.");
       const canvas = document.createElement('canvas');
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       const dataUrl = canvas.toDataURL('image/png');
-      console.log("Content script: Sending 'new_frame' message to sidebar.");
+      console.log('Content script: Video frame captured, sending to sidebar.');
+      // 直接发送给sidebar，不通过background
       chrome.runtime.sendMessage({ action: 'new_frame', dataUrl: dataUrl });
     } else {
-      console.log("Content script: No video element found on the page.");
+      console.log('Content script: No video element found.');
     }
   }
 
@@ -43,35 +44,43 @@ if (typeof window.contentScriptInjected === 'undefined') {
       position: fixed;
       bottom: 20px;
       right: 20px;
-      width: 60px;
-      height: 60px;
+      width: 48px;
+      height: 48px;
       background: #1E88E5;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      box-shadow: 0 4px 12px rgba(30, 136, 229, 0.4);
+      box-shadow: 0 2px 8px rgba(30, 136, 229, 0.3);
       z-index: 10000;
       transition: all 0.3s ease;
       border: none;
       outline: none;
+      opacity: 0.6;
     `;
 
     // 悬停效果
     screenshotButton.addEventListener('mouseenter', () => {
-      screenshotButton.style.transform = 'scale(1.1)';
-      screenshotButton.style.boxShadow = '0 6px 16px rgba(30, 136, 229, 0.6)';
+      screenshotButton.style.transform = 'scale(1.2)';
+      screenshotButton.style.opacity = '1';
+      screenshotButton.style.boxShadow = '0 4px 16px rgba(30, 136, 229, 0.5)';
     });
 
     screenshotButton.addEventListener('mouseleave', () => {
       screenshotButton.style.transform = 'scale(1)';
-      screenshotButton.style.boxShadow = '0 4px 12px rgba(30, 136, 229, 0.4)';
+      screenshotButton.style.opacity = '0.6';
+      screenshotButton.style.boxShadow = '0 2px 8px rgba(30, 136, 229, 0.3)';
     });
 
     // 点击事件
     screenshotButton.addEventListener('click', () => {
-      captureVideoFrame();
+      // 打开sidebar
+      chrome.runtime.sendMessage({ action: 'open_sidebar' });
+      // 延迟截取视频画面，确保sidebar已经加载完成
+      setTimeout(() => {
+        captureVideoFrame();
+      }, 500);
     });
 
     document.body.appendChild(screenshotButton);
