@@ -1,7 +1,7 @@
 {
   "name": "Video Screenshot",
   "version": "1.0",
-  "description": "A Chrome extension to capture video frames and create a collage.",
+  "description": "Take snapshots of videos on any webpage and combine them into a single image of dialogue moments.",
   "manifest_version": 3,
   "icons": {
     "16": "logo.png",

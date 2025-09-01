@@ -150,8 +150,15 @@ export default {
         // Trigger the download.
         const link = document.createElement('a');
         link.href = canvas.toDataURL('image/png');
-        link.download = 'pintu.png';
-        link.click();
+        
+        // 获取当前网页的title作为文件名
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          const pageTitle = tabs[0].title || 'snapshot';
+          // 清理文件名中的非法字符
+          const cleanTitle = pageTitle.replace(/[<>:"/\\|?*]/g, '_');
+          link.download = `${cleanTitle}.png`;
+          link.click();
+        });
       });
     },
   },

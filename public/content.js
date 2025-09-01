@@ -25,7 +25,6 @@ if (typeof window.contentScriptInjected === 'undefined') {
   // 创建截图按钮
   function createScreenshotButton() {
     if (screenshotButton) {
-      console.log('Pintu: Screenshot button already exists');
       return;
     }
 
@@ -80,7 +79,7 @@ if (typeof window.contentScriptInjected === 'undefined') {
       // 延迟截取视频画面，确保sidebar已经加载完成
       setTimeout(() => {
         captureVideoFrame();
-      }, 500);
+      }, 100);
     });
 
     document.body.appendChild(screenshotButton);
@@ -98,12 +97,9 @@ if (typeof window.contentScriptInjected === 'undefined') {
   // 检测video元素
   function checkForVideoElements() {
     const videos = document.querySelectorAll('video');
-    console.log('Pintu: Checking for video elements, found:', videos.length);
     if (videos.length > 0) {
-      console.log('Pintu: Creating screenshot button');
       createScreenshotButton();
     } else {
-      console.log('Pintu: No videos found, removing button if exists');
       removeScreenshotButton();
     }
   }
