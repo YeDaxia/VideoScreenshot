@@ -39,13 +39,13 @@
               <li>
                 <button class="btn dropdown-item btn-primary" @click="saveImage" :disabled="frames.length === 0">
                   <Icon icon="mdi:insert-photo" width="1.3em"/>
-                  <span class="px-1">保存拼图</span>
+                  <span class="px-1">{{ t('savePuzzle') }}</span>
                 </button>
               </li>
               <li>
                 <button class="btn dropdown-item btn-primary" @click="downloadZip" :disabled="frames.length === 0">
                   <Icon icon="mdi:zip-box" width="1.3em"/>
-                  <span class="px-1">打包原图</span>
+                  <span class="px-1">{{ t('packOriginal') }}</span>
                 </button>
               </li>
             </ul>
