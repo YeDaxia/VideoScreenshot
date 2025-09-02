@@ -27,10 +27,29 @@
     <div class="footer p-2 bg-light">
       <div class="d-flex align-items-center gap-1">
         <input type="range" class="form-range mx-2" min="0" max="100" v-model.number="spacing" :disabled="frames.length === 0">
-        <button class="btn btn-outline-primary btn-rounded btn-save" @click="saveImage" :disabled="frames.length === 0">
-           <Icon icon="mdi:content-save" width="1.3em"/>
-           <span class="px-1">{{ t('save') }}</span>
-        </button>
+        <div class="btn-group">
+            <button class="btn btn-outline-primary btn-save" @click="saveImage" :disabled="frames.length === 0">
+              <Icon icon="mdi:content-save" width="1.3em"/>
+              <span class="px-1">{{ t('save') }}</span>
+            </button>
+            <button type="button" class="btn btn-outline-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+              <span class="visually-hidden">Toggle Dropdown</span>
+            </button>
+            <ul class="dropdown-menu">
+              <li>
+                <button class="btn dropdown-item btn-primary" @click="saveImage" :disabled="frames.length === 0">
+                  <Icon icon="mdi:insert-photo" width="1.3em"/>
+                  <span class="px-1">保存拼图</span>
+                </button>
+              </li>
+              <li>
+                <button class="btn dropdown-item btn-primary" @click="downloadZip" :disabled="frames.length === 0">
+                  <Icon icon="mdi:zip-box" width="1.3em"/>
+                  <span class="px-1">打包原图</span>
+                </button>
+              </li>
+            </ul>
+          </div>
       </div>
     </div>
   </div>
@@ -161,6 +180,47 @@ export default {
         });
       });
     },
+    async downloadZip() {
+      if (this.frames.length === 0) {
+        alert(t('noImages'));
+        return;
+      }
+
+      // 动态导入JSZip
+      const JSZip = (await import('jszip')).default;
+      const zip = new JSZip();
+
+      // 获取当前网页的title作为文件夹名
+      chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+        const pageTitle = tabs[0].title || 'screenshots';
+        const cleanTitle = pageTitle.replace(/[<>:"/\\|?*]/g, '_');
+
+        // 将每张截图添加到ZIP中
+        this.frames.forEach((frame, index) => {
+          // 从dataUrl中提取base64数据
+          const base64Data = frame.dataUrl.split(',')[1];
+          const fileName = `screenshot_${index + 1}.png`;
+          zip.file(fileName, base64Data, { base64: true });
+        });
+
+        try {
+          // 生成ZIP文件
+          const content = await zip.generateAsync({ type: 'blob' });
+          
+          // 创建下载链接
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(content);
+          link.download = `${cleanTitle}_screenshots.zip`;
+          link.click();
+          
+          // 清理URL对象
+          URL.revokeObjectURL(link.href);
+        } catch (error) {
+          console.error('生成ZIP文件失败:', error);
+          alert('生成ZIP文件失败，请重试');
+        }
+      });
+    },
   },
   created() {
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -247,7 +307,7 @@ export default {
   padding-right: 4px;
 }
 .btn-save{
-  width: 120px;
+  width: 90px;
 }
 .footer {
   flex-shrink: 0;

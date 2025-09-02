@@ -12,6 +12,7 @@
     "@iconify/vue": "^5.0.0",
     "@popperjs/core": "^2.11.8",
     "bootstrap": "^5.3.8",
+    "jszip": "^3.10.1",
     "vue": "^3.5.18",
     "vue-draggable-next": "^2.3.0"
   },
