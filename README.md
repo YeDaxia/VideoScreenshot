@@ -8,7 +8,7 @@
 
 如果你对构建过程感兴趣可以查看这个文章：
 
-[我用Trae从0到1开发上架了个Chrome插件](hhttps://mp.weixin.qq.com/s/Nznmnj_wqqT7LhMn3wTAiw)
+[我用Trae从0到1开发上架了个Chrome插件](https://mp.weixin.qq.com/s/Nznmnj_wqqT7LhMn3wTAiw)
 
 
 ## 快速开始
