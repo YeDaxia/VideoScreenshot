@@ -1,6 +1,6 @@
 {
-  "name": "Video Screenshot",
-  "version": "1.0",
+  "name": "33字幕图 - Video Screenshot, Subtitle puzzle",
+  "version": "1.1",
   "description": "Take snapshots of videos on any webpage and combine them into a single image of dialogue moments.",
   "manifest_version": 3,
   "icons": {
