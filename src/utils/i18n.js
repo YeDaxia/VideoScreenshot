@@ -9,7 +9,13 @@ const messages = {
     packOriginal: '打包原图',
     noImages: '没有图片可以保存',
     dragHandle: '拖拽',
-    delete: '删除'
+    delete: '删除',
+    help: '帮助',
+    developerContact: '开发者联系方式',
+    websiteHome: '网站主页',
+    webVersion: '网页版',
+    supportUs: '好评支持',
+    followDeveloper: '关注开发者'
   },
   en: {
     screenshot: 'Screenshot',
@@ -20,7 +26,13 @@ const messages = {
     packOriginal: 'Pack Original',
     noImages: 'No images to save',
     dragHandle: 'Drag',
-    delete: 'Delete'
+    delete: 'Delete',
+    help: 'Help',
+    developerContact: 'Developer Contact',
+    websiteHome: 'Website Home',
+    webVersion: 'Web Version',
+    supportUs: 'Support Us',
+    followDeveloper: 'Follow Developer'
   },
   ja: {
     screenshot: 'スクリーンショット',
@@ -31,7 +43,13 @@ const messages = {
     packOriginal: '元画像をパック',
     noImages: '保存する画像がありません',
     dragHandle: 'ドラッグ',
-    delete: '削除'
+    delete: '削除',
+    help: 'ヘルプ',
+    developerContact: '開発者連絡先',
+    websiteHome: 'ウェブサイトホーム',
+    webVersion: 'ウェブ版',
+    supportUs: 'サポート',
+    followDeveloper: '開発者をフォロー'
   },
   ko: {
     screenshot: '스크린샷',
@@ -42,7 +60,13 @@ const messages = {
     packOriginal: '원본 패키지',
     noImages: '저장할 이미지가 없습니다',
     dragHandle: '드래그',
-    delete: '삭제'
+    delete: '삭제',
+    help: '도움말',
+    developerContact: '개발자 연락처',
+    websiteHome: '웹사이트 홈',
+    webVersion: '웹 버전',
+    supportUs: '지원하기',
+    followDeveloper: '개발자 팔로우'
   },
   fr: {
     screenshot: 'Capture d\'écran',
@@ -53,7 +77,13 @@ const messages = {
     packOriginal: 'Emballer l\'original',
     noImages: 'Aucune image à sauvegarder',
     dragHandle: 'Glisser',
-    delete: 'Supprimer'
+    delete: 'Supprimer',
+    help: 'Aide',
+    developerContact: 'Contact développeur',
+    websiteHome: 'Accueil du site',
+    webVersion: 'Version Web',
+    supportUs: 'Nous soutenir',
+    followDeveloper: 'Suivre le développeur'
   }
 };
 

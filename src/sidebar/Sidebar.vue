@@ -1,10 +1,15 @@
 <template>
   <div id="sidebar" class="d-flex flex-column">
     <div class="header p-3 bg-light">
-      <button class="btn btn-outline-primary btn-lg btn-rounded w-100" @click="captureVideoFrame">
-        <Icon icon="mdi:camera" width="1.2em"/>
-        <span class="px-1">{{ t('screenshot') }}</span>
-      </button>
+      <div class="d-flex align-items-center">
+        <button class="btn btn-outline-primary btn-lg btn-rounded flex-grow-1" @click="captureVideoFrame">
+          <Icon icon="mdi:camera" width="1.2em"/>
+          <span class="px-1">{{ t('screenshot') }}</span>
+        </button>
+        <button class="btn btn-link" @click="showHelpModal">
+          <Icon icon="mdi:help-circle" width="1.5em"/>
+        </button>
+      </div>
     </div>
     <div class="main-content d-flex flex-grow-1">
       <div class="preview-area flex-grow-1">
@@ -52,6 +57,35 @@
           </div>
       </div>
     </div>
+    
+    <!-- Help Modal -->
+    <div class="modal fade" :class="{ show: showModal }" :style="{ display: showModal ? 'block' : 'none' }" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="helpModalLabel">{{ t('help') }}</h5>
+            <button type="button" class="btn-close" @click="hideHelpModal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="website-info mb-4">
+              <h6 class="mb-2">{{ t('webVersion') }}</h6>
+              <p class="mb-0"><Icon icon="mdi:web" width="1em" class="me-2"/> <a :href="siteUrl" target="_blank" class="text-decoration-none">33字幕图</a></p>
+            </div>
+            <div class="contact-info mb-4">
+              <h6 class="mb-2">{{ t('followDeveloper') }}</h6>
+              <p class="mb-1"><Icon icon="ic:baseline-wechat" width="1em" class="me-2"/> 大侠Luffy</p>
+              <p class="mb-1"><Icon icon="ri:twitter-x-fill" width="1em" class="me-2"/> <a :href="xUrl" target="_blank" class="text-decoration-none">@大侠Luffy</a></p>
+            </div>
+            <div class="website-info">
+              <h6 class="mb-2">{{ t('supportUs') }}</h6>
+              <p class="mb-1"><Icon icon="mdi:google-chrome" width="1em" class="me-2"/> <a :href="chromeUrl" target="_blank" class="text-decoration-none">Google Chrome</a></p>
+              <p class="mb-0"><Icon icon="mdi:microsoft-edge" width="1em" class="me-2"/> <a :href="edgeUrl" target="_blank" class="text-decoration-none">Microsoft Edge</a></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div v-if="showModal" class="modal-backdrop fade show"></div>
   </div>
 </template>
 
@@ -67,9 +101,14 @@ export default {
   },
   data() {
     return {
+      siteUrl: 'https://zmt.agilestudio.cn/',
+      xUrl: 'https://x.com/LuffyDaxia',
+      chromeUrl: 'https://chromewebstore.google.com/detail/33%E5%AD%97%E5%B9%95%E5%9B%BE-video-screenshot-su/pbcagdhhfcdfnaibicbopplgnbcjlffd',
+      edgeUrl: 'https://microsoftedge.microsoft.com/addons/detail/33%E5%AD%97%E5%B9%95%E5%9B%BE-video-screenshot/mnlkbagfiackddjbbcfdnfoppgpphcle',
       frames: [],
       spacing: 0,
       frameHeight: 0,
+      showModal: false,
     };
   },
   watch: {
@@ -81,6 +120,12 @@ export default {
   },
   methods: {
     t,
+    showHelpModal() {
+      this.showModal = true;
+    },
+    hideHelpModal() {
+      this.showModal = false;
+    },
     captureVideoFrame() {
       console.log('Sidebar: Sending \'capture\' message to content script.');
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -311,5 +356,17 @@ export default {
 }
 .footer {
   flex-shrink: 0;
+}
+
+/* Custom Modal Styles for Bootstrap Modal */
+.contact-info h6, .website-info h6 {
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #495057;
+}
+
+.contact-info p, .website-info p {
+  display: flex;
+  align-items: center;
 }
 </style>
