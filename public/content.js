@@ -98,6 +98,11 @@ if (typeof window.contentScriptInjected === 'undefined') {
   function checkForVideoElements() {
     const videos = document.querySelectorAll('video');
     if (videos.length > 0) {
+      videos.forEach(video => {
+        if (video.crossOrigin !== 'anonymous') {
+          video.crossOrigin = 'anonymous';
+        }
+      });
       createScreenshotButton();
     } else {
       removeScreenshotButton();
