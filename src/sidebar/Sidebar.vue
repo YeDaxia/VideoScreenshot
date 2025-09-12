@@ -13,6 +13,32 @@
     </div>
     <div class="main-content d-flex flex-grow-1">
       <div class="preview-area flex-grow-1">
+        <!-- Empty state when no screenshots -->
+        <div v-if="frames.length === 0" class="empty-state d-flex flex-column justify-content-center align-items-center h-100 text-center">
+            <div class="developer-info">
+              <div class="text-center mb-4">
+                 <img class="img-avatar" src="../assets/avatar.jpg"></img>
+              </div>
+              <div class="contact-info">
+                <p class="mb-1">
+                  <Icon icon="mdi:web" width="1em" class="me-2"/> 
+                  <a href="https://zmt.agilestudio.cn/" target="_blank" class="text-decoration-none">33字幕图</a>
+                </p>
+                <p class="mb-0">
+                  <Icon icon="ri:twitter-x-fill" width="1em" class="me-2"/> 
+                  <a href="https://x.com/LuffyDaxia" target="_blank" class="text-decoration-none">@大侠Luffy</a>
+                </p>
+            </div>
+            <div class="text-center mt-4">
+                <img class="img-qrcode" src="../assets/qrcode.jpg"></img>
+                <div class="text-center">
+                  <Icon icon="ic:baseline-wechat" width="1em" class="me-2"/> 大侠Luffy
+                </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Screenshots display -->
         <div v-for="(element, index) in frames" :key="index" :style="getFrameStyle(index)" class="preview-item">
           <img ref="imageRef" :src="element.dataUrl" class="img-fluid" @load="onImageLoad(index)"/>
         </div>
@@ -368,5 +394,16 @@ export default {
 .contact-info p, .website-info p {
   display: flex;
   align-items: center;
+}
+
+.img-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+}
+
+.img-qrcode{
+  width: 120px;
+  height: 120px;
 }
 </style>
