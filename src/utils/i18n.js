@@ -15,7 +15,12 @@ const messages = {
     websiteHome: '网站主页',
     webVersion: '网页版',
     supportUs: '好评支持',
-    followDeveloper: '关注开发者'
+    followDeveloper: '关注开发者',
+    settings: '设置',
+    showFloatingButton: '显示悬浮按钮',
+    copy: '复制',
+    copySuccess: '复制成功',
+    copyFailed: '复制失败'
   },
   en: {
     screenshot: 'Screenshot',
@@ -32,7 +37,12 @@ const messages = {
     websiteHome: 'Website Home',
     webVersion: 'Web Version',
     supportUs: 'Support Us',
-    followDeveloper: 'Follow Developer'
+    followDeveloper: 'Follow Developer',
+    settings: 'Settings',
+    showFloatingButton: 'Show Floating Button',
+    copy: 'Copy',
+    copySuccess: 'Copied successfully',
+    copyFailed: 'Copy failed'
   },
   ja: {
     screenshot: 'スクリーンショット',

@@ -2,6 +2,17 @@ if (typeof window.contentScriptInjected === 'undefined') {
   window.contentScriptInjected = true;
 
   let screenshotButton = null;
+  let isButtonEnabled = true;
+
+  if (chrome.storage && chrome.storage.local) {
+    chrome.storage.local.get(['showFloatingButton'], (result) => {
+      isButtonEnabled = result.showFloatingButton !== false;
+      checkForVideoElements();
+    });
+  } else {
+    console.warn('Pintu: chrome.storage.local is not available. Using default settings.');
+    checkForVideoElements();
+  }
 
   // 截图功能函数
   function captureVideoFrame() {
@@ -103,7 +114,11 @@ if (typeof window.contentScriptInjected === 'undefined') {
           video.crossOrigin = 'anonymous';
         }
       });
-      createScreenshotButton();
+      if (isButtonEnabled) {
+        createScreenshotButton();
+      } else {
+        removeScreenshotButton();
+      }
     } else {
       removeScreenshotButton();
     }
@@ -127,6 +142,12 @@ if (typeof window.contentScriptInjected === 'undefined') {
     if (request.action === 'capture') {
       console.log("Content script: Received 'capture' message.");
       captureVideoFrame();
+    } else if (request.action === 'update_settings') {
+      console.log("Content script: Received 'update_settings' message.", request.settings);
+      if (typeof request.settings.showFloatingButton !== 'undefined') {
+        isButtonEnabled = request.settings.showFloatingButton;
+        checkForVideoElements();
+      }
     }
   });
 }

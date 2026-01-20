@@ -6,8 +6,8 @@
           <Icon icon="mdi:camera" width="1.2em"/>
           <span class="px-1">{{ t('screenshot') }}</span>
         </button>
-        <button class="btn btn-link" @click="showHelpModal">
-          <Icon icon="mdi:help-circle" width="1.5em"/>
+        <button class="btn btn-link" @click="showSettingsModal">
+          <Icon icon="mdi:cog" width="1.5em"/>
         </button>
       </div>
     </div>
@@ -20,10 +20,6 @@
                  <img class="img-avatar" src="../assets/avatar.jpg"></img>
               </div>
               <div class="contact-info">
-                <p class="mb-1">
-                  <Icon icon="mdi:web" width="1em" class="me-2"/> 
-                  <a href="https://zmt.agilestudio.cn/" target="_blank" class="text-decoration-none">33字幕图</a>
-                </p>
                 <p class="mb-0">
                   <Icon icon="ri:twitter-x-fill" width="1em" class="me-2"/> 
                   <a href="https://x.com/LuffyDaxia" target="_blank" class="text-decoration-none">@大侠Luffy</a>
@@ -59,9 +55,11 @@
       <div class="d-flex align-items-center gap-1">
         <input type="range" class="form-range mx-2" min="0" max="100" v-model.number="spacing" :disabled="frames.length === 0">
         <div class="btn-group">
-            <button class="btn btn-outline-primary btn-save" @click="saveImage" :disabled="frames.length === 0">
-              <Icon icon="mdi:content-save" width="1.3em"/>
-              <span class="px-1">{{ t('save') }}</span>
+            <button class="btn btn-outline-primary" @click="copyImage" :disabled="frames.length === 0" :title="t('copy')">
+                <Icon icon="mdi:content-copy" width="1.3em"/>
+           </button>
+            <button class="btn btn-outline-primary" @click="saveImage" :disabled="frames.length === 0">
+                <Icon icon="mdi:content-save" width="1.3em"/>
             </button>
             <button type="button" class="btn btn-outline-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
               <span class="visually-hidden">Toggle Dropdown</span>
@@ -84,15 +82,22 @@
       </div>
     </div>
     
-    <!-- Help Modal -->
+    <!-- Settings/Help Modal -->
     <div class="modal fade" :class="{ show: showModal }" :style="{ display: showModal ? 'block' : 'none' }" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="helpModalLabel">{{ t('help') }}</h5>
-            <button type="button" class="btn-close" @click="hideHelpModal" aria-label="Close"></button>
+            <h5 class="modal-title" id="helpModalLabel">{{ t('settings') }}</h5>
+            <button type="button" class="btn-close" @click="hideSettingsModal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
+            <div class="settings-info mb-4">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="floatingButtonSwitch" v-model="showFloatingButton" @change="toggleFloatingButton">
+                <label class="form-check-label" for="floatingButtonSwitch">{{ t('showFloatingButton') }}</label>
+              </div>
+            </div>
+            <hr>
             <div class="website-info mb-4">
               <h6 class="mb-2">{{ t('webVersion') }}</h6>
               <p class="mb-0"><Icon icon="mdi:web" width="1em" class="me-2"/> <a :href="siteUrl" target="_blank" class="text-decoration-none">33字幕图</a></p>
@@ -112,6 +117,18 @@
       </div>
     </div>
     <div v-if="showModal" class="modal-backdrop fade show"></div>
+    
+    <!-- Toast Message -->
+    <div class="toast-container position-fixed top-50 start-50 translate-middle p-3">
+      <div class="toast align-items-center text-white bg-success border-0" :class="{ show: showToast }" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+          <div class="toast-body">
+            {{ toastMessage }}
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" @click="showToast = false" aria-label="Close"></button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -135,6 +152,9 @@ export default {
       spacing: 0,
       frameHeight: 0,
       showModal: false,
+      showFloatingButton: true,
+      toastMessage: '',
+      showToast: false,
     };
   },
   watch: {
@@ -146,11 +166,22 @@ export default {
   },
   methods: {
     t,
-    showHelpModal() {
+    showSettingsModal() {
       this.showModal = true;
     },
-    hideHelpModal() {
+    hideSettingsModal() {
       this.showModal = false;
+    },
+    toggleFloatingButton() {
+      chrome.storage.local.set({ showFloatingButton: this.showFloatingButton });
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs[0]) {
+          chrome.tabs.sendMessage(tabs[0].id, { 
+            action: 'update_settings', 
+            settings: { showFloatingButton: this.showFloatingButton } 
+          });
+        }
+      });
     },
     captureVideoFrame() {
       console.log('Sidebar: Sending \'capture\' message to content script.');
@@ -185,7 +216,11 @@ export default {
     deleteFrame(index) {
       this.frames.splice(index, 1);
     },
-    saveImage() {
+    async generateMergedCanvas() {
+      if (this.frames.length === 0) {
+        return null;
+      }
+
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
 
@@ -198,57 +233,94 @@ export default {
         });
       });
 
-      Promise.all(promises).then(loadedImages => {
-        const images = loadedImages.filter(img => img !== null);
-        if (images.length === 0) {
-          alert(t('noImages'));
-          return;
-        }
+      const loadedImages = await Promise.all(promises);
+      const images = loadedImages.filter(img => img !== null);
+      
+      if (images.length === 0) {
+        return null;
+      }
 
-        // To ensure a uniform stitch, we'll normalize all images to the same width.
-        // We'll use the maximum width found in the set of images.
-        const maxWidth = Math.max(...images.map(img => img.naturalWidth));
-        canvas.width = maxWidth;
+      // To ensure a uniform stitch, we'll normalize all images to the same width.
+      // We'll use the maximum width found in the set of images.
+      const maxWidth = Math.max(...images.map(img => img.naturalWidth));
+      canvas.width = maxWidth;
 
-        // Calculate the corresponding height for each image to maintain aspect ratio.
-        const scaledHeights = images.map(img => img.naturalHeight * (maxWidth / img.naturalWidth));
+      // Calculate the corresponding height for each image to maintain aspect ratio.
+      const scaledHeights = images.map(img => img.naturalHeight * (maxWidth / img.naturalWidth));
 
-        // Calculate total height and the y-position for each image in a single pass.
-        let totalHeight = 0;
-        const yPositions = [];
-        let currentY = 0;
+      // Calculate total height and the y-position for each image in a single pass.
+      let totalHeight = 0;
+      const yPositions = [];
+      let currentY = 0;
 
-        if (images.length > 0) {
-          for (let i = 0; i < images.length; i++) {
-            yPositions.push(currentY);
-            if (i < images.length - 1) {
-              currentY += scaledHeights[i] * (1 - this.spacing / 100);
-            } else {
-              // For the last image, add its full height to get the total.
-              totalHeight = currentY + scaledHeights[i];
-            }
+      if (images.length > 0) {
+        for (let i = 0; i < images.length; i++) {
+          yPositions.push(currentY);
+          if (i < images.length - 1) {
+            currentY += scaledHeights[i] * (1 - this.spacing / 100);
+          } else {
+            // For the last image, add its full height to get the total.
+            totalHeight = currentY + scaledHeights[i];
           }
         }
-        canvas.height = totalHeight;
+      }
+      canvas.height = totalHeight;
 
-        // Draw images in reverse order so the first image appears on top
-        for (let i = images.length - 1; i >= 0; i--) {
-          const img = images[i];
-          ctx.drawImage(img, 0, yPositions[i], maxWidth, scaledHeights[i]);
-        }
+      // Draw images in reverse order so the first image appears on top
+      for (let i = images.length - 1; i >= 0; i--) {
+        const img = images[i];
+        ctx.drawImage(img, 0, yPositions[i], maxWidth, scaledHeights[i]);
+      }
 
-        // Trigger the download.
-        const link = document.createElement('a');
-        link.href = canvas.toDataURL('image/png');
-        
-        // 获取当前网页的title作为文件名
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-          const pageTitle = tabs[0].title || 'snapshot';
-          // 清理文件名中的非法字符
-          const cleanTitle = pageTitle.replace(/[<>:"/\\|?*]/g, '_');
-          link.download = `${cleanTitle}.png`;
-          link.click();
+      return canvas;
+    },
+    async copyImage() {
+      const canvas = await this.generateMergedCanvas();
+      if (!canvas) {
+        alert(t('noImages'));
+        return;
+      }
+
+      try {
+        canvas.toBlob(async (blob) => {
+          if (!blob) {
+            console.error('Canvas to Blob failed');
+            return;
+          }
+          const item = new ClipboardItem({ 'image/png': blob });
+          await navigator.clipboard.write([item]);
+          this.showToastMessage(t('copySuccess'));
         });
+      } catch (error) {
+        console.error('Copy failed:', error);
+        this.showToastMessage(t('copyFailed'));
+      }
+    },
+    showToastMessage(message) {
+      this.toastMessage = message;
+      this.showToast = true;
+      setTimeout(() => {
+        this.showToast = false;
+      }, 2000);
+    },
+    async saveImage() {
+      const canvas = await this.generateMergedCanvas();
+      if (!canvas) {
+        alert(t('noImages'));
+        return;
+      }
+
+      // Trigger the download.
+      const link = document.createElement('a');
+      link.href = canvas.toDataURL('image/png');
+      
+      // 获取当前网页的title作为文件名
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const pageTitle = tabs[0].title || 'snapshot';
+        // 清理文件名中的非法字符
+        const cleanTitle = pageTitle.replace(/[<>:"/\\|?*]/g, '_');
+        link.download = `${cleanTitle}.png`;
+        link.click();
       });
     },
     async downloadZip() {
@@ -294,6 +366,10 @@ export default {
     },
   },
   created() {
+    chrome.storage.local.get(['showFloatingButton'], (result) => {
+      this.showFloatingButton = result.showFloatingButton !== false;
+    });
+
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       if (request.action === 'new_frame' && request.dataUrl) {
         console.log('Sidebar: Received \'new_frame\' message.');
