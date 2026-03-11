@@ -21,8 +21,8 @@
               </div>
               <div class="contact-info">
                 <p class="mb-0">
-                  <Icon icon="ri:twitter-x-fill" width="1em" class="me-2"/> 
-                  <a href="https://x.com/LuffyDaxia" target="_blank" class="text-decoration-none">@大侠Luffy</a>
+                  <Icon icon="mdi:web" width="1em" class="me-2"/> 
+                  <a href="https://hidaxia.com" target="_blank" class="text-decoration-none">hidaxia.com</a>
                 </p>
             </div>
             <div class="text-center mt-4">
@@ -100,7 +100,7 @@
             <hr>
             <div class="website-info mb-4">
               <h6 class="mb-2">{{ t('webVersion') }}</h6>
-              <p class="mb-0"><Icon icon="mdi:web" width="1em" class="me-2"/> <a :href="siteUrl" target="_blank" class="text-decoration-none">33字幕图</a></p>
+              <p class="mb-0"><Icon icon="mdi:web" width="1em" class="me-2"/> <a :href="siteUrl" target="_blank" class="text-decoration-none">VeoShot</a></p>
             </div>
             <div class="contact-info mb-4">
               <h6 class="mb-2">{{ t('followDeveloper') }}</h6>
@@ -144,7 +144,7 @@ export default {
   },
   data() {
     return {
-      siteUrl: 'https://zmt.agilestudio.cn/',
+      siteUrl: 'https://veoshot.hidaxia.com/',
       xUrl: 'https://x.com/LuffyDaxia',
       chromeUrl: 'https://chromewebstore.google.com/detail/33%E5%AD%97%E5%B9%95%E5%9B%BE-video-screenshot-su/pbcagdhhfcdfnaibicbopplgnbcjlffd',
       edgeUrl: 'https://microsoftedge.microsoft.com/addons/detail/33%E5%AD%97%E5%B9%95%E5%9B%BE-video-screenshot/mnlkbagfiackddjbbcfdnfoppgpphcle',
