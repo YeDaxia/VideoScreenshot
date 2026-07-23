@@ -188,12 +188,20 @@ export default {
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         chrome.scripting.executeScript(
           {
-            target: { tabId: tabs[0].id },
+            // 腾讯视频等站点会把播放器放在子 frame 中。
+            target: { tabId: tabs[0].id, allFrames: true },
             files: ['content.js'],
           },
           () => {
-            // After the script is injected, send the message to capture
-            chrome.tabs.sendMessage(tabs[0].id, { action: 'capture' });
+            if (chrome.runtime.lastError) {
+              console.error('Sidebar: Failed to inject content script.', chrome.runtime.lastError);
+              return;
+            }
+            // 由后台统一从所有 frame 中选择有效的视频画面。
+            chrome.runtime.sendMessage({
+              action: 'capture_tab',
+              tabId: tabs[0].id,
+            });
           }
         );
       });
@@ -368,6 +376,15 @@ export default {
   created() {
     chrome.storage.local.get(['showFloatingButton'], (result) => {
       this.showFloatingButton = result.showFloatingButton !== false;
+    });
+
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]) {
+        chrome.runtime.sendMessage({
+          action: 'sidebar_ready',
+          tabId: tabs[0].id,
+        });
+      }
     });
 
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
