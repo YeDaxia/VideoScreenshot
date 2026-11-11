@@ -20,7 +20,15 @@ const messages = {
     showFloatingButton: '显示悬浮按钮',
     copy: '复制',
     copySuccess: '复制成功',
-    copyFailed: '复制失败'
+    copyFailed: '复制失败',
+    crop: '统一裁剪',
+    cropTop: '上',
+    cropBottom: '下',
+    cropLeft: '左',
+    cropRight: '右',
+    resetCrop: '重置',
+    overlap: '重叠',
+    packCropped: '打包裁剪图'
   },
   en: {
     screenshot: 'Screenshot',
@@ -42,7 +50,15 @@ const messages = {
     showFloatingButton: 'Show Floating Button',
     copy: 'Copy',
     copySuccess: 'Copied successfully',
-    copyFailed: 'Copy failed'
+    copyFailed: 'Copy failed',
+    crop: 'Crop all images',
+    cropTop: 'Top',
+    cropBottom: 'Bottom',
+    cropLeft: 'Left',
+    cropRight: 'Right',
+    resetCrop: 'Reset',
+    overlap: 'Overlap',
+    packCropped: 'Pack cropped images'
   },
   ja: {
     screenshot: 'スクリーンショット',
@@ -59,7 +75,15 @@ const messages = {
     websiteHome: 'ウェブサイトホーム',
     webVersion: 'ウェブ版',
     supportUs: 'サポート',
-    followDeveloper: '開発者をフォロー'
+    followDeveloper: '開発者をフォロー',
+    crop: '一括トリミング',
+    cropTop: '上',
+    cropBottom: '下',
+    cropLeft: '左',
+    cropRight: '右',
+    resetCrop: 'リセット',
+    overlap: '重なり',
+    packCropped: 'トリミング画像を保存'
   },
   ko: {
     screenshot: '스크린샷',
@@ -76,7 +100,15 @@ const messages = {
     websiteHome: '웹사이트 홈',
     webVersion: '웹 버전',
     supportUs: '지원하기',
-    followDeveloper: '개발자 팔로우'
+    followDeveloper: '개발자 팔로우',
+    crop: '전체 자르기',
+    cropTop: '위',
+    cropBottom: '아래',
+    cropLeft: '왼쪽',
+    cropRight: '오른쪽',
+    resetCrop: '초기화',
+    overlap: '겹침',
+    packCropped: '자른 이미지 묶기'
   },
   fr: {
     screenshot: 'Capture d\'écran',
@@ -93,7 +125,15 @@ const messages = {
     websiteHome: 'Accueil du site',
     webVersion: 'Version Web',
     supportUs: 'Nous soutenir',
-    followDeveloper: 'Suivre le développeur'
+    followDeveloper: 'Suivre le développeur',
+    crop: 'Recadrer toutes les images',
+    cropTop: 'Haut',
+    cropBottom: 'Bas',
+    cropLeft: 'Gauche',
+    cropRight: 'Droite',
+    resetCrop: 'Réinitialiser',
+    overlap: 'Chevauchement',
+    packCropped: 'Exporter les images recadrées'
   }
 };
 
