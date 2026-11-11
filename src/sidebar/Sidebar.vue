@@ -35,13 +35,20 @@
         </div>
         
         <!-- Screenshots display -->
-        <div v-for="(element, index) in frames" :key="index" :style="getFrameStyle(index)" class="preview-item">
-          <img ref="imageRef" :src="element.dataUrl" class="img-fluid" @load="onImageLoad(index)"/>
+        <div v-for="(element, index) in frames" :key="element.id" :style="getFrameStyle(index)" class="preview-item">
+          <div ref="cropPreviewRef" class="crop-preview" :style="getCropPreviewStyle(element)">
+            <img
+              :src="element.dataUrl"
+              class="crop-preview-image"
+              :style="getCropImageStyle(element)"
+              @load="onImageLoad(index, $event)"
+            />
+          </div>
         </div>
       </div>
       <div class="editor-area">
         <draggable :list="frames" class="list-group" handle=".drag-handle">
-          <div v-for="(element, index) in frames" :key="index" class="editor-item">
+          <div v-for="(element, index) in frames" :key="element.id" class="editor-item">
             <img :src="element.dataUrl" class="editor-thumbnail"/>
             <div class="item-overlay">
               <span class="drag-handle">&#9776;</span>
@@ -52,7 +59,36 @@
       </div>
     </div>
     <div class="footer p-2 bg-light">
+      <div class="crop-controls mb-2">
+        <div class="crop-controls-title">
+          <span>{{ t('crop') }}</span>
+          <button class="btn btn-link btn-sm p-0" type="button" :disabled="frames.length === 0" @click="resetCrop">
+            {{ t('resetCrop') }}
+          </button>
+        </div>
+        <div class="crop-control-row">
+          <label for="cropTop">{{ t('cropTop') }}</label>
+          <input id="cropTop" v-model.number="cropTop" type="range" class="form-range" min="0" :max="maxCropTop" :disabled="!hasFrameDimensions">
+          <output>{{ cropTop }} px</output>
+        </div>
+        <div class="crop-control-row">
+          <label for="cropBottom">{{ t('cropBottom') }}</label>
+          <input id="cropBottom" v-model.number="cropBottom" type="range" class="form-range" min="0" :max="maxCropBottom" :disabled="!hasFrameDimensions">
+          <output>{{ cropBottom }} px</output>
+        </div>
+        <div class="crop-control-row">
+          <label for="cropLeft">{{ t('cropLeft') }}</label>
+          <input id="cropLeft" v-model.number="cropLeft" type="range" class="form-range" min="0" :max="maxCropLeft" :disabled="!hasFrameDimensions">
+          <output>{{ cropLeft }} px</output>
+        </div>
+        <div class="crop-control-row">
+          <label for="cropRight">{{ t('cropRight') }}</label>
+          <input id="cropRight" v-model.number="cropRight" type="range" class="form-range" min="0" :max="maxCropRight" :disabled="!hasFrameDimensions">
+          <output>{{ cropRight }} px</output>
+        </div>
+      </div>
       <div class="d-flex align-items-center gap-1">
+        <span class="spacing-label">{{ t('overlap') }}</span>
         <input type="range" class="form-range mx-2" min="0" max="100" v-model.number="spacing" :disabled="frames.length === 0">
         <div class="btn-group">
             <button class="btn btn-outline-primary" @click="copyImage" :disabled="frames.length === 0" :title="t('copy')">
@@ -74,7 +110,7 @@
               <li>
                 <button class="btn dropdown-item btn-primary" @click="downloadZip" :disabled="frames.length === 0">
                   <Icon icon="mdi:zip-box" width="1.3em"/>
-                  <span class="px-1">{{ t('packOriginal') }}</span>
+                  <span class="px-1">{{ t('packCropped') }}</span>
                 </button>
               </li>
             </ul>
@@ -151,6 +187,10 @@ export default {
       frames: [],
       spacing: 0,
       frameHeight: 0,
+      cropTop: 0,
+      cropBottom: 0,
+      cropLeft: 0,
+      cropRight: 0,
       showModal: false,
       showFloatingButton: true,
       toastMessage: '',
@@ -162,6 +202,43 @@ export default {
       if (newFrames.length === 0) {
         this.frameHeight = 0;
       }
+    },
+    cropTop() {
+      this.refreshPreviewHeight();
+    },
+    cropBottom() {
+      this.refreshPreviewHeight();
+    },
+    cropLeft() {
+      this.refreshPreviewHeight();
+    },
+    cropRight() {
+      this.refreshPreviewHeight();
+    },
+  },
+  computed: {
+    minimumFrameWidth() {
+      const widths = this.frames.map(frame => frame.width).filter(width => width > 0);
+      return widths.length > 0 ? Math.min(...widths) : 0;
+    },
+    minimumFrameHeight() {
+      const heights = this.frames.map(frame => frame.height).filter(height => height > 0);
+      return heights.length > 0 ? Math.min(...heights) : 0;
+    },
+    hasFrameDimensions() {
+      return this.minimumFrameWidth > 0 && this.minimumFrameHeight > 0;
+    },
+    maxCropTop() {
+      return Math.max(0, this.minimumFrameHeight - this.cropBottom - 1);
+    },
+    maxCropBottom() {
+      return Math.max(0, this.minimumFrameHeight - this.cropTop - 1);
+    },
+    maxCropLeft() {
+      return Math.max(0, this.minimumFrameWidth - this.cropRight - 1);
+    },
+    maxCropRight() {
+      return Math.max(0, this.minimumFrameWidth - this.cropLeft - 1);
     },
   },
   methods: {
@@ -206,11 +283,69 @@ export default {
         );
       });
     },
-    onImageLoad(index) {
-      if (this.$refs.imageRef && this.$refs.imageRef.length > 0) {
-        this.frameHeight = this.$refs.imageRef[0].clientHeight;
-        console.log('clientHeight:', this.frameHeight);
+    onImageLoad(index, event) {
+      const frame = this.frames[index];
+      if (!frame) {
+        return;
       }
+      frame.width = event.target.naturalWidth;
+      frame.height = event.target.naturalHeight;
+      this.clampCropValues();
+      this.refreshPreviewHeight();
+    },
+    refreshPreviewHeight() {
+      this.$nextTick(() => {
+        const previews = this.$refs.cropPreviewRef;
+        const firstPreview = Array.isArray(previews) ? previews[0] : previews;
+        this.frameHeight = firstPreview?.clientHeight || 0;
+      });
+    },
+    clampCropValues() {
+      this.cropTop = Math.min(this.cropTop, this.maxCropTop);
+      this.cropBottom = Math.min(this.cropBottom, this.maxCropBottom);
+      this.cropLeft = Math.min(this.cropLeft, this.maxCropLeft);
+      this.cropRight = Math.min(this.cropRight, this.maxCropRight);
+    },
+    resetCrop() {
+      this.cropTop = 0;
+      this.cropBottom = 0;
+      this.cropLeft = 0;
+      this.cropRight = 0;
+    },
+    getCropRect(source) {
+      const width = source.naturalWidth || source.width || 1;
+      const height = source.naturalHeight || source.height || 1;
+      const left = Math.min(this.cropLeft, width - 1);
+      const top = Math.min(this.cropTop, height - 1);
+      const right = Math.min(this.cropRight, width - left - 1);
+      const bottom = Math.min(this.cropBottom, height - top - 1);
+      return {
+        x: left,
+        y: top,
+        width: width - left - right,
+        height: height - top - bottom,
+        sourceWidth: width,
+        sourceHeight: height,
+      };
+    },
+    getCropPreviewStyle(frame) {
+      if (!frame.width || !frame.height) {
+        return {};
+      }
+      const crop = this.getCropRect(frame);
+      return {
+        aspectRatio: `${crop.width} / ${crop.height}`,
+      };
+    },
+    getCropImageStyle(frame) {
+      if (!frame.width || !frame.height) {
+        return {};
+      }
+      const crop = this.getCropRect(frame);
+      return {
+        width: `${(crop.sourceWidth / crop.width) * 100}%`,
+        transform: `translate(-${(crop.x / crop.sourceWidth) * 100}%, -${(crop.y / crop.sourceHeight) * 100}%)`,
+      };
     },
     getFrameStyle(index) {
       const height = this.frameHeight || 150; // Fallback for safety
@@ -223,6 +358,35 @@ export default {
     },
     deleteFrame(index) {
       this.frames.splice(index, 1);
+      this.clampCropValues();
+      this.refreshPreviewHeight();
+    },
+    loadFrameImages() {
+      return Promise.all(this.frames.map(frame => new Promise(resolve => {
+        const img = new Image();
+        img.src = frame.dataUrl;
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+      })));
+    },
+    createCroppedCanvas(img) {
+      const crop = this.getCropRect(img);
+      const canvas = document.createElement('canvas');
+      canvas.width = crop.width;
+      canvas.height = crop.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(
+        img,
+        crop.x,
+        crop.y,
+        crop.width,
+        crop.height,
+        0,
+        0,
+        crop.width,
+        crop.height,
+      );
+      return canvas;
     },
     async generateMergedCanvas() {
       if (this.frames.length === 0) {
@@ -232,16 +396,7 @@ export default {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
 
-      const promises = this.frames.map(frame => {
-        return new Promise(resolve => {
-          const img = new Image();
-          img.src = frame.dataUrl;
-          img.onload = () => resolve(img);
-          img.onerror = () => resolve(null);
-        });
-      });
-
-      const loadedImages = await Promise.all(promises);
+      const loadedImages = await this.loadFrameImages();
       const images = loadedImages.filter(img => img !== null);
       
       if (images.length === 0) {
@@ -250,11 +405,12 @@ export default {
 
       // To ensure a uniform stitch, we'll normalize all images to the same width.
       // We'll use the maximum width found in the set of images.
-      const maxWidth = Math.max(...images.map(img => img.naturalWidth));
+      const crops = images.map(img => this.getCropRect(img));
+      const maxWidth = Math.max(...crops.map(crop => crop.width));
       canvas.width = maxWidth;
 
       // Calculate the corresponding height for each image to maintain aspect ratio.
-      const scaledHeights = images.map(img => img.naturalHeight * (maxWidth / img.naturalWidth));
+      const scaledHeights = crops.map(crop => crop.height * (maxWidth / crop.width));
 
       // Calculate total height and the y-position for each image in a single pass.
       let totalHeight = 0;
@@ -277,7 +433,18 @@ export default {
       // Draw images in reverse order so the first image appears on top
       for (let i = images.length - 1; i >= 0; i--) {
         const img = images[i];
-        ctx.drawImage(img, 0, yPositions[i], maxWidth, scaledHeights[i]);
+        const crop = crops[i];
+        ctx.drawImage(
+          img,
+          crop.x,
+          crop.y,
+          crop.width,
+          crop.height,
+          0,
+          yPositions[i],
+          maxWidth,
+          scaledHeights[i],
+        );
       }
 
       return canvas;
@@ -346,15 +513,17 @@ export default {
         const pageTitle = tabs[0].title || 'screenshots';
         const cleanTitle = pageTitle.replace(/[<>:"/\\|?*]/g, '_');
 
-        // 将每张截图添加到ZIP中
-        this.frames.forEach((frame, index) => {
-          // 从dataUrl中提取base64数据
-          const base64Data = frame.dataUrl.split(',')[1];
-          const fileName = `screenshot_${index + 1}.png`;
-          zip.file(fileName, base64Data, { base64: true });
-        });
-
         try {
+          const loadedImages = await this.loadFrameImages();
+          loadedImages.forEach((img, index) => {
+            if (!img) {
+              return;
+            }
+            const croppedCanvas = this.createCroppedCanvas(img);
+            const base64Data = croppedCanvas.toDataURL('image/png').split(',')[1];
+            zip.file(`screenshot_${index + 1}.png`, base64Data, { base64: true });
+          });
+
           // 生成ZIP文件
           const content = await zip.generateAsync({ type: 'blob' });
           
@@ -390,7 +559,12 @@ export default {
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       if (request.action === 'new_frame' && request.dataUrl) {
         console.log('Sidebar: Received \'new_frame\' message.');
-        this.frames.push({ id: Date.now(), dataUrl: request.dataUrl });
+        this.frames.push({
+          id: `${Date.now()}-${this.frames.length}`,
+          dataUrl: request.dataUrl,
+          width: 0,
+          height: 0,
+        });
       }
     });
   },
@@ -432,6 +606,19 @@ export default {
 .preview-area {
   overflow-y: auto;
   position: relative;
+}
+.crop-preview {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: #000;
+}
+.crop-preview-image {
+  position: absolute;
+  inset: 0 auto auto 0;
+  max-width: none;
+  height: auto;
+  display: block;
 }
 .editor-area {
   flex-shrink: 0;
@@ -475,6 +662,42 @@ export default {
 }
 .footer {
   flex-shrink: 0;
+}
+.crop-controls {
+  padding: 6px 8px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  background: #fff;
+}
+.crop-controls-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.crop-control-row {
+  display: grid;
+  grid-template-columns: 32px minmax(80px, 1fr) 52px;
+  align-items: center;
+  gap: 6px;
+  min-height: 25px;
+  font-size: 12px;
+}
+.crop-control-row .form-range {
+  margin: 0;
+}
+.crop-control-row output {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: #6c757d;
+}
+.spacing-label {
+  flex-shrink: 0;
+  margin-left: 4px;
+  font-size: 12px;
+  color: #495057;
 }
 
 /* Custom Modal Styles for Bootstrap Modal */
